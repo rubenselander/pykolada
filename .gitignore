@@ -182,6 +182,7 @@ data/**/*
 
 # All files ending in ".rst" are ignored
 .rst
+*.rst
 
 
 # File named local_test.py is ignored
