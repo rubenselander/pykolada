@@ -1,144 +1,100 @@
-from pykolada import pykolada
+import pytest
+import pykolada
+
+query = pykolada.query
+
+# If needed, setup and teardown can be managed using pytest fixtures
 
 
-def test_query():
-    # Test valid endpoint and parameters
-    result = pykolada.query("data", year=2021, region="SE")
+def test_kpi_endpoint_valid():
+    result = query("kpi", id="N00011")
     assert isinstance(result, list)
     assert len(result) > 0
 
-    # Test invalid endpoint
-    try:
-        pykolada.query("invalid_endpoint", year=2021, region="SE")
-        assert False, "Expected ValueError for invalid endpoint"
-    except ValueError as e:
-        assert (
-            str(e)
-            == "Invalid endpoint: invalid_endpoint. Valid endpoints are: ['data', 'oudata']"
-        )
 
-    # Test invalid parameter
-    try:
-        pykolada.query("data", year=2021, invalid_param="value")
-        assert False, "Expected ValueError for invalid parameter"
-    except ValueError as e:
-        assert (
-            str(e)
-            == "Invalid parameter: invalid_param. Valid parameters for endpoint data are: ['year', 'region']"
-        )
+def test_kpi_endpoint_invalid():
+    with pytest.raises(ValueError):
+        query("kpi", invalid_param="123")
 
-    # Test invalid parameter value type
-    try:
-        pykolada.query("data", year=2021, region=123)
-        assert False, "Expected ValueError for invalid parameter value type"
-    except ValueError as e:
-        assert (
-            str(e)
-            == "Invalid parameter value: 123. Parameter values must be strings or lists of strings."
-        )
 
-    # Test invalid parameter value type in list
-    try:
-        pykolada.query("data", year=2021, region=["SE", 123])
-        assert False, "Expected ValueError for invalid parameter value type in list"
-    except ValueError as e:
-        assert (
-            str(e)
-            == "Invalid parameter value: 123. Parameter values must be strings or lists of strings."
-        )
-
-    # Test empty parameter value
-    try:
-        pykolada.query("data", year=2021, region="")
-        assert False, "Expected ValueError for empty parameter value"
-    except ValueError as e:
-        assert (
-            str(e)
-            == "Invalid parameter value: . Parameter values must be strings or lists of strings."
-        )
-
-    # Test empty parameter value in list
-    try:
-        pykolada.query("data", year=2021, region=["SE", ""])
-        assert False, "Expected ValueError for empty parameter value in list"
-    except ValueError as e:
-        assert (
-            str(e)
-            == "Invalid parameter value: . Parameter values must be strings or lists of strings."
-        )
-
-    # Test empty parameter value in list for primary_key
-    try:
-        pykolada.query("data", year=2021, region=["SE"], primary_key=[""])
-        assert (
-            False
-        ), "Expected ValueError for empty parameter value in list for primary_key"
-    except ValueError as e:
-        assert (
-            str(e)
-            == "Invalid parameter value: . Parameter values must be strings or lists of strings."
-        )
-
-    # Test empty parameter value for primary_key
-    try:
-        pykolada.query("data", year=2021, region="SE", primary_key="")
-        assert False, "Expected ValueError for empty parameter value for primary_key"
-    except ValueError as e:
-        assert (
-            str(e)
-            == "Invalid parameter value: . Parameter values must be strings or lists of strings."
-        )
-
-    # Test missing required parameter
-    try:
-        pykolada.query("data", year=2021)
-        assert False, "Expected ValueError for missing required parameter"
-    except ValueError as e:
-        assert (
-            str(e)
-            == "Invalid parameter: region. Valid parameters for endpoint data are: ['year', 'region']"
-        )
-
-    # Test missing required parameter in list
-    try:
-        pykolada.query("data", year=2021, region=["SE"])
-        assert False, "Expected ValueError for missing required parameter in list"
-    except ValueError as e:
-        assert (
-            str(e)
-            == "Invalid parameter: region. Valid parameters for endpoint data are: ['year', 'region']"
-        )
-
-    # Test missing required parameter for primary_key
-    try:
-        pykolada.query("data", year=2021, primary_key="SE")
-        assert (
-            False
-        ), "Expected ValueError for missing required parameter for primary_key"
-    except ValueError as e:
-        assert (
-            str(e)
-            == "Invalid parameter: region. Valid parameters for endpoint data are: ['year', 'region']"
-        )
-
-    # Test missing required parameter in list for primary_key
-    try:
-        pykolada.query("data", year=2021, primary_key=["SE"])
-        assert (
-            False
-        ), "Expected ValueError for missing required parameter in list for primary_key"
-    except ValueError as e:
-        assert (
-            str(e)
-            == "Invalid parameter: region. Valid parameters for endpoint data are: ['year', 'region']"
-        )
-
-    # Test empty kwargs
-    result = pykolada.query("data")
+def test_kpi_groups_endpoint_valid():
+    result = query("kpi_groups", id="G2KPI113774")
     assert isinstance(result, list)
     assert len(result) > 0
 
-    print("All tests passed!")
+
+def test_kpi_groups_endpoint_invalid():
+    with pytest.raises(ValueError):
+        query("kpi_groups", invalid_param="abc")
 
 
-test_query()
+def test_municipality_endpoint_valid():
+    result = query("municipality", id="0180")
+    assert isinstance(result, list)
+    assert len(result) > 0
+
+
+def test_municipality_endpoint_invalid():
+    with pytest.raises(ValueError):
+        query("municipality", invalid_param="xyz")
+
+
+def test_municipality_groups_endpoint_valid():
+    result = query("municipality_groups", id="G128518")
+    assert isinstance(result, list)
+    assert len(result) > 0
+
+
+def test_municipality_groups_endpoint_invalid():
+    with pytest.raises(ValueError):
+        query("municipality_groups", invalid_param="def")
+
+
+def test_ou_endpoint_valid():
+    result = query("ou", id="V17E74148070")
+    assert isinstance(result, list)
+    assert len(result) > 0
+
+
+def test_ou_endpoint_invalid():
+    with pytest.raises(ValueError):
+        query("ou", invalid_param="ghi")
+
+
+def test_data_endpoint_valid():
+    result = query("data", kpi="N00011", municipality="0114", year="2020")
+    assert isinstance(result, list)
+    assert len(result) > 0
+
+
+def test_data_endpoint_invalid():
+    with pytest.raises(ValueError):
+        query("data", invalid_param="jkl")
+
+
+def test_oudata_endpoint_valid():
+    result = query("oudata", kpi="U21468", ou="V21E0010", year="2020")
+    assert isinstance(result, list)
+    assert len(result) > 0
+
+
+def test_oudata_endpoint_invalid():
+    with pytest.raises(ValueError):
+        query("oudata", invalid_param="mno")
+
+
+def run_all():
+    test_kpi_endpoint_valid()
+    test_kpi_endpoint_invalid()
+    test_kpi_groups_endpoint_valid()
+    test_kpi_groups_endpoint_invalid()
+    test_municipality_endpoint_valid()
+    test_municipality_endpoint_invalid()
+    test_municipality_groups_endpoint_valid()
+    test_municipality_groups_endpoint_invalid()
+    test_ou_endpoint_valid()
+    test_ou_endpoint_invalid()
+    test_data_endpoint_valid()
+    test_data_endpoint_invalid()
+    test_oudata_endpoint_valid()
+    test_oudata_endpoint_invalid()
