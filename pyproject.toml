@@ -14,7 +14,7 @@ description = "A Python package for interacting with Kolada's statistical API."
 readme = "README.md"
 license = { file = "LICENSE.txt" }
 classifiers = [
-    "Development Status :: 1 - Planning",
+    "Development Status :: 2 - Pre-Alpha",
     "Programming Language :: Python",
 ]
 
