@@ -1,4 +1,4 @@
-__version__ = "0.1.1"
+__version__ = "1.0.0"
 from pykolada.pykolada import (
     get_kpi,
     get_kpi_groups,
