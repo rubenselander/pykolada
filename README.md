@@ -53,12 +53,12 @@ Each endpoint supports different parameters for querying. Please refer to the do
 ## Documentation and Examples
 <!-- ToDo: Add documentation and examples. -->
 
+
 ## Planned Features
 - Optional caching of data.
 - Support for outputting data in CSV format (currently only original JSON is supported).
 - Usage of additional custom filters that can be applied after the data has been retrieved.
 - Support for the from_date parameter (limiting results data published after a certain date).
-
 
 
 ## License
