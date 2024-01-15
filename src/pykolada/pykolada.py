@@ -501,6 +501,12 @@ def _get_all_data(endpoint: str):
     -------
     A list of dictionaries for the data for the specified endpoint.
     """
+    # Raise an error if the endpoint is data or oudata
+    if endpoint in ["data", "oudata"]:
+        raise ValueError(
+            f"Endpoint '{endpoint}' does not support the _get_all_data function."
+        )
+
     return api_query(endpoint)
 
 
