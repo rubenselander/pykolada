@@ -164,12 +164,21 @@ cython_debug/
 # Folder named "data" is ignored and all its contents
 data/
 data/*
+data
+data/**
+data/**/*
+
 
 # All files ending in ".db", ".sql", ".sqlite" or ".sqlite3" are ignored
 .db
 .sql
 .sqlite
 .sqlite3
+
+*.db
+*.sql
+*.sqlite
+*.sqlite3
 
 # All files ending in ".rst" are ignored
 .rst
