@@ -528,11 +528,3 @@ def _save_non_data(folder_path=None):
                 os.path.join(folder_path, f"{endpoint}.json"), "w", encoding="utf-8"
             ) as f:
                 json.dump(json_data, f, indent=4, ensure_ascii=False)
-
-
-# def main():
-#     _save_non_data(folder_path="data")
-
-
-# if __name__ == "__main__":
-#     main()

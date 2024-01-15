@@ -1,15 +1,54 @@
 # PyKolada
-A Python package for interacting with Kolada's statistical API.
+A Python Wrapper for Kolada API
+
+## Overview
+
+This Python package provides a lightweight wrapper for the Kolada API, which allows users to access and interact with key performance indicators (KPIs) for Swedish municipalities and organizational units. The Kolada database, maintained by RKA (Rådet för kommunal analys), offers a rich set of data, and this wrapper simplifies the process of querying and retrieving this information.
+
+## Features
+
+- Access to various endpoints like KPI, KPI groups, municipalities, municipality groups, and organizational units.
+- Support for querying data based on different parameters such as ID, title, description, operating area, year, etc.
+- Handling of pagination to fetch all relevant data.
+- Customizable queries with support for filtering and specifying primary keys.
 
 ## Installation
-The package can be installed from PyPI using pip:
-```bash
-pip install kolada
-```
-OR
+
+This package requires Python 3.8 or higher.
+You can install it using pip:
+
 ```bash
 pip install pykolada
 ```
 
-The two packages are identical, and depend on the same code. The only difference is the name of the package.
+## Usage
 
+### Importing the Module
+
+```python
+import pykolada
+```
+
+### Making Queries
+
+You can make queries to different endpoints. For example, to query KPI data:
+
+```python
+kpi_data = pykolada.get_kpi(id='some_id', title='some_title')
+```
+
+
+## Endpoints
+
+- `kpi`
+- `kpi_groups`
+- `municipality`
+- `municipality_groups`
+- `ou`
+- `data`
+- `oudata`
+
+Each endpoint supports different parameters for querying. Please refer to the documentation for detailed information.
+
+
+---
