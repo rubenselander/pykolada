@@ -1,5 +1,5 @@
 # PyKolada
-A Python Wrapper for Kolada API
+A Python wrapper for the statistical API Kolada.
 
 ## Overview
 
@@ -39,7 +39,6 @@ kpi_data = pykolada.get_kpi(id='some_id', title='some_title')
 
 
 ## Endpoints
-
 - `kpi`
 - `kpi_groups`
 - `municipality`
@@ -49,6 +48,21 @@ kpi_data = pykolada.get_kpi(id='some_id', title='some_title')
 - `oudata`
 
 Each endpoint supports different parameters for querying. Please refer to the documentation for detailed information.
+
+
+## Documentation and Examples
+<!-- ToDo: Add documentation and examples. -->
+
+## Planned Features
+- Optional caching of data.
+- Support for outputting data in CSV format (currently only original JSON is supported).
+- Usage of additional custom filters that can be applied after the data has been retrieved.
+- Support for the from_date parameter (limiting results data published after a certain date).
+
+
+
+## License
+MIT License
 
 
 ---
