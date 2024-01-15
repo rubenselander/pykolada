@@ -22,6 +22,8 @@ classifiers = [
 [tool.setuptools.dynamic]
 version = { attr = "pykolada.__version__" }
 
+[project.optional-dependencies]
+test = ["pytest"]
 
 [project.urls]
 Homepage = "https://github.com/reversehobo/pykolada"
