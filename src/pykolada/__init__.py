@@ -1,5 +1,5 @@
 __version__ = "0.1.0"
-from src.pykolada.pykolada import (
+from pykolada.pykolada import (
     get_kpi,
     get_kpi_groups,
     get_municipality,
@@ -9,6 +9,7 @@ from src.pykolada.pykolada import (
     get_oudata,
     _get_all_data,
     _make_request,
+    query,
 )
 
 __all__ = [
@@ -21,4 +22,5 @@ __all__ = [
     "get_oudata",
     "_get_all_data",
     "_make_request",
+    "query",
 ]
