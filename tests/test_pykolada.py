@@ -1,4 +1,4 @@
-import pykolada
+from src import pykolada
 
 
 def test_query():
