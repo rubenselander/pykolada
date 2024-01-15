@@ -6,129 +6,69 @@ import os
 
 BASE_URL = "http://api.kolada.se/v2/"
 
-# Roles
-# primary_key:
-# The parameter is used to identify a single object.
-# Is added directly to the URL after the endpoint.
-# BASE_URL + endpoint + / + primary_key
-# Other parameters are ignored.
+ENDPOINTS = [
+    "kpi",
+    "kpi_groups",
+    "municipality",
+    "municipality_groups",
+    "ou",
+    "data",
+    "oudata",
+]
 
-# path:
-# The parameter is used to add path filters to the URL.
-# BASE_URL + endpoint + / + path_name + / + path_value
-# Query parameters are added after the path parameters.
-
-# query:
-# Added to the end of the URL as a query string.
-# BASE_URL + endpoint + path_arguments + ? + query_name + = + query_value
-# Multiple query parameters are separated by &.
-
-# filter:
-# Filter parameters are used to filter the response from the API.
-# Not added to the URL.
-# Filter parameters are applied after the response is received.
-
-
-# type:
-# The type of the parameter.
-#
-
-ENDPOINTS = {
+PARAMETERS = {
     "kpi": {
-        "id": {
-            "type": "str",
-            "role": "primary_key",
-        },
-        "title": {
-            "type": "str",
-            "role": "query",
-        },
-        "description": {
-            "type": "str",
-            "role": "query",
-        },
-        "operating_area": {
-            "type": "str",
-            "role": "query",
-        },
+        "id": "primary_key",
+        "title": "query",
+        "description": "query",
+        "operating_area": "query",
     },
-    "kpi_groups": {
-        "id": {
-            "type": "str",
-            "role": "primary_key",
-        },
-        "title": {
-            "type": "str",
-            "role": "query",
-        },
-    },
+    "kpi_groups": {"id": "primary_key", "title": "query"},
     "municipality": {
-        "id": {
-            "type": "str",
-            "role": "primary_key",
-        },
-        "title": {
-            "type": "str",
-            "role": "query",
-        },
+        "id": "primary_key",
+        "title": "query",
     },
     "municipality_groups": {
-        "id": {
-            "type": "str",
-            "role": "primary_key",
-        },
-        "title": {
-            "type": "str",
-            "role": "query",
-        },
+        "id": "primary_key",
+        "title": "query",
     },
-    "ou": {
-        "id": {
-            "type": "str",
-            "role": "primary_key",
-        },
-        "title": {
-            "type": "str",
-            "role": "query",
-        },
-        # "municipality": {
-        #     "type": "str",
-        #     "role": "filter",
-        # },
-    },
+    "ou": {"id": "primary_key", "title": "query"},
     "data": {
-        "kpi": {
-            "type": "str",
-            "role": "path",
-        },
-        "municipality": {
-            "type": "str",
-            "role": "path",
-        },
-        "year": {
-            "type": "str",
-            "role": "path",
-        },
+        "kpi": "path",
+        "municipality": "path",
+        "year": "path",
     },
     "oudata": {
-        "kpi": {
-            "type": "str",
-            "role": "path",
-        },
-        "ou": {
-            "type": "str",
-            "role": "path",
-        },
-        "year": {
-            "type": "str",
-            # Also accepts int
-            "role": "path",
-        },
+        "kpi": "path",
+        "ou": "path",
+        "year": "path",
     },
 }
 
+path_construction_order = ["kpi", "municipality", "ou", "year"]
 
-def _build_url(endpoint: str, path_params: dict, query_params: dict) -> str:
+
+def _make_request(url: str) -> list:
+    """Fetches all data from a given endpoint, handling pagination."""
+    all_data = []
+    while url:
+        response = requests.get(url)
+        if response.status_code != 200:
+            raise Exception(
+                f"Error fetching data: HTTP {response.status_code}. URL: {url}"
+            )
+        data = response.json()
+        all_data.extend(data.get("values", []))
+        url = data.get("next_page")
+    return all_data
+
+
+def _build_url(
+    endpoint: str,
+    primary_keys: dict = None,
+    path_params: dict = None,
+    query_params: dict = None,
+) -> str:
     """Builds a URL for a given endpoint and parameters.
     Assumes that the provided parameters are valid.
 
@@ -136,6 +76,8 @@ def _build_url(endpoint: str, path_params: dict, query_params: dict) -> str:
     ----------
     endpoint : str
         The endpoint to build a URL for.
+    primary_keys: list[str]
+        A list of primary keys.
     path_params : dict
         A dictionary of path parameters.
     query_params : dict
@@ -145,57 +87,39 @@ def _build_url(endpoint: str, path_params: dict, query_params: dict) -> str:
     -------
     A URL string.
     """
+    # Print for debugging
+    # print(f"endpoint: {endpoint}")
+    # print(f"primary_keys: {json.dumps(primary_keys, indent=4, ensure_ascii=False)}")
+    # print(f"path_params: {json.dumps(path_params, indent=4, ensure_ascii=False)}")
+    # print(f"query_params: {json.dumps(query_params, indent=4, ensure_ascii=False)}")
+    # print("")
 
-    # Build path
-    path = ""
-    for param in ENDPOINTS[endpoint]:
-        if param in path_params:
-            if isinstance(path_params[param], list):
-                path += f"/{','.join(path_params[param])}"
-            else:
-                path += f"/{path_params[param]}"
+    url = BASE_URL + endpoint
+    if primary_keys:
+        url += "/" + ",".join(primary_keys)
+        return url
 
-    # Build query
-    query = ""
-    for param in ENDPOINTS[endpoint]:
-        if param in query_params:
-            if isinstance(query_params[param], list):
-                query += f"{param}={','.join(query_params[param])}&"
-            else:
-                query += f"{param}={query_params[param]}&"
+    if path_params:
+        for key in path_construction_order:
+            if key in path_params:
+                if isinstance(path_params[key], str):
+                    url += "/" + key + "/" + path_params[key]
+                elif isinstance(path_params[key], list):
+                    url += "/" + key + "/" + ",".join(path_params[key])
 
-    # Remove trailing &
-    if query:
-        query = "?" + query[:-1]
+    if query_params:
+        url += "?"
+        for key, value in query_params.items():
+            if isinstance(value, str):
+                url += key + "=" + urllib.parse.quote(value) + "&"
+            elif isinstance(value, list):
+                for item in value:
+                    url += key + "=" + urllib.parse.quote(item) + "&"
 
-    return BASE_URL + endpoint + path + query
+        # Remove the last "&"
+        url = url[:-1]
 
-
-def _make_request(url: str) -> list:
-    """Fetches all data from a given endpoint, handling pagination."""
-    all_data = []
-    while url:
-        response = requests.get(url)
-        if response.status_code != 200:
-            raise Exception(f"Error fetching data: HTTP {response.status_code}")
-        data = response.json()
-        all_data.extend(data.get("values", []))
-        url = data.get("next_page")
-    return all_data
-
-
-def _filter_results(
-    endpoint: str, data: List[Dict], filters: Dict[str, Any]
-) -> List[Dict]:
-    """
-    Filters the API response data based on given criteria.
-    For strings: substring matching.
-    For lists of strings: substring matching for any item in the list.
-    For other types: exact match.
-    For lists of other types: exact match for any item in the list.
-    """
-    # TODO: Add support for filtering results returned by the api
-    return data
+    return url
 
 
 def _format_data_response(endpoint: str, data: List[Dict]) -> List[Dict]:
@@ -239,8 +163,11 @@ def _format_data_response(endpoint: str, data: List[Dict]) -> List[Dict]:
     return formatted_data
 
 
-def query(endpoint: str, **kwargs) -> List[Dict]:
-    """Main function to handle API queries.
+def query(
+    endpoint: str,
+    **kwargs,
+):
+    """A function for interacting with the Kolada API.
 
     Parameters
     ----------
@@ -252,100 +179,85 @@ def query(endpoint: str, **kwargs) -> List[Dict]:
     Returns
     -------
     A list of dictionaries containing the response from the API.
+
     """
-    # Validate endpoint
-    assert (
-        endpoint in ENDPOINTS
-    ), f"Invalid endpoint: {endpoint}. Valid endpoints are: {list(ENDPOINTS.keys())}"
+    if endpoint not in ENDPOINTS:
+        raise ValueError(
+            f"Invalid endpoint: {endpoint}. Valid endpoints are: {ENDPOINTS}"
+        )
 
-    # Remove None values from kwargs
-    kwargs = {k: v for k, v in kwargs.items() if v is not None}
+    input_parameters = {
+        "primary_key": [],
+        "query": {},
+        "path": {},
+    }
 
-    # Validate parameters
-    assert set(kwargs.keys()).issubset(
-        ENDPOINTS[endpoint].keys()
-    ), f"Invalid parameters: {set(kwargs.keys()) - set(ENDPOINTS[endpoint].keys())}. Valid parameters are: {ENDPOINTS[endpoint].keys()}"
-
-    # Add a special case for the year parameter which if an int or list of ints is converted to a string or list of strings.
+    # If present convert "year" to string or list of strings
     if "year" in kwargs:
         if isinstance(kwargs["year"], int):
             kwargs["year"] = str(kwargs["year"])
         elif isinstance(kwargs["year"], list):
-            kwargs["year"] = [str(item) for item in kwargs["year"]]
+            kwargs["year"] = [str(year) for year in kwargs["year"]]
 
-    parameters = {
-        "path": {},
-        "query": {},
-        "filter": {},
-    }
+    # Remove any parameters with value None or empty list or empty string
+    kwargs = {k: v for k, v in kwargs.items() if v}
 
-    # If a primary key is provided, ignore all other parameters.
-    param_types = [ENDPOINTS[endpoint][param]["role"] for param in kwargs]
-    if "primary_key" in param_types:
-        if len(param_types) > 1:
-            print(
-                f"""Warning: primary_key parameter (id) provided for endpoint {endpoint}. Ignoring all other parameters."""
+    # Check that all given parameters are valid
+    for key, value in kwargs.items():
+        if key not in PARAMETERS[endpoint]:
+            raise ValueError(
+                f"Invalid parameter: {key}. Valid parameters for endpoint {endpoint} are: {PARAMETERS[endpoint]}"
             )
 
-        # Validate parameter is a string
-        assert isinstance(
-            kwargs["id"], str
-        ), f"Invalid type for parameter id. id must be a str."
+        # Check that the parameter value is a string (or list of strings for primary_key and path)
+        if not isinstance(value, str) and not isinstance(value, list):
+            raise ValueError(
+                f"Invalid parameter value: {value}. Parameter values must be strings or lists of strings."
+            )
 
-        url = BASE_URL + endpoint + "/" + kwargs["id"]
-        return _make_request(url)
-
-    # Validate parameter types.
-    # Note: all parameters with the role "path" OR "filter" can also be lists of the specified type.
-    for param, value in kwargs.items():
         if isinstance(value, list):
-            # Check that the role is "path"
-            assert (
-                ENDPOINTS[endpoint][param]["role"] == "path"
-                or ENDPOINTS[endpoint][param]["role"] == "filter"
-            ), f"Invalid type for parameter: {param}. {param} must be a {ENDPOINTS[endpoint][param]['type']} and not a list."
+            if (
+                PARAMETERS[endpoint][key] != "primary_key"
+                and PARAMETERS[endpoint][key] != "path"
+            ):
+                raise ValueError(
+                    f"Invalid parameter value: {value}. Parameter values must be strings or lists of strings."
+                )
+            else:
+                for item in value:
+                    if not isinstance(item, str):
+                        raise ValueError(
+                            f"Invalid parameter value: {value}. Parameter values must be strings or lists of strings."
+                        )
 
-            # Check that the type is valid
-            assert all(
-                isinstance(item, ENDPOINTS[endpoint][param]["type"]) for item in value
-            ), f"Invalid type for parameter {param}. {param} must be a {ENDPOINTS[endpoint][param]['type']} or a list of {ENDPOINTS[endpoint][param]['type']}."
+        elif not isinstance(value, str):
+            raise ValueError(
+                f"Invalid parameter value: {value}. Parameter values must be strings or lists of strings."
+            )
 
+        # If the parameter is a primary_key add the value to the primary_keys list
+        if PARAMETERS[endpoint][key] == "primary_key":
+            input_parameters["primary_key"].append(value)
+
+        # Else add the parameter to the input_parameters list as a dictionary
         else:
-            assert isinstance(
-                value, ENDPOINTS[endpoint][param]["type"]
-            ), f"Invalid type for parameter {param}. {param} must be a {ENDPOINTS[endpoint][param]['type']}."
+            input_parameters[PARAMETERS[endpoint][key]][key] = value
 
-        # Add parameter to parameters dict
-        parameters[ENDPOINTS[endpoint][param]["role"]][param] = value
-
-    # Build URL
+    # Build the URL
     url = _build_url(
-        endpoint=endpoint,
-        path_params=parameters["path"],
-        query_params=parameters["query"],
+        endpoint,
+        primary_keys=input_parameters["primary_key"],
+        path_params=input_parameters["path"],
+        query_params=input_parameters["query"],
     )
 
-    # Try to fetch data
-    try:
-        data = _make_request(url)
-    except Exception as e:
-        raise Exception(
-            f"Error fetching data: {e}",
-            f"URL: {url}",
-            f"Input parameters: {kwargs}",
-        )
+    # Make the request
+    json_data = _make_request(url)
 
-    # Format data and oudata responses
     if endpoint in ["data", "oudata"]:
-        data = _format_data_response(endpoint=endpoint, data=data)
+        json_data = _format_data_response(endpoint, json_data)
 
-    # Filter results if applicable
-    # if parameters["filter"]:
-    #     data = _filter_results(
-    #         endpoint=endpoint, data=data, filters=parameters["filter"]
-    #     )
-
-    return data
+    return json_data
 
 
 def get_kpi(
@@ -532,6 +444,51 @@ def get_oudata(
     )
 
 
+def api_query(endpoint: str, **kwargs) -> List[Dict]:
+    """
+    Routes a request to the appropriate function based on the endpoint.
+
+    Parameters
+    ----------
+    endpoint : str
+        The name of the endpoint.
+    kwargs : dict
+        Additional arguments to pass to the endpoint function.
+
+    Returns
+    -------
+    A list of dictionaries containing the response from the API.
+
+    Raises
+    ------
+    ValueError
+        If an invalid endpoint is provided.
+    """
+    if endpoint not in ENDPOINTS:
+        raise ValueError(
+            f"Invalid endpoint: {endpoint}. Valid endpoints are: {ENDPOINTS}"
+        )
+
+    if endpoint == "kpi":
+        return get_kpi(**kwargs)
+    elif endpoint == "kpi_groups":
+        return get_kpi_groups(**kwargs)
+    elif endpoint == "municipality":
+        return get_municipality(**kwargs)
+    elif endpoint == "municipality_groups":
+        return get_municipality_groups(**kwargs)
+    elif endpoint == "ou":
+        return get_ou(**kwargs)
+    elif endpoint == "data":
+        return get_data(**kwargs)
+    elif endpoint == "oudata":
+        return get_oudata(**kwargs)
+    else:
+        raise ValueError(
+            f"Endpoint '{endpoint}' is not yet implemented in the route_request function."
+        )
+
+
 def _get_all_data(endpoint: str):
     """Get all data for an endpoint.
 
@@ -544,22 +501,7 @@ def _get_all_data(endpoint: str):
     -------
     A list of dictionaries for the data for the specified endpoint.
     """
-    if endpoint not in ENDPOINTS:
-        raise ValueError(f"Invalid endpoint: {endpoint}")
-
-    if endpoint in ["data", "oudata"]:
-        raise ValueError(f"Invalid endpoint: {endpoint}")
-
-    if endpoint == "kpi":
-        return get_kpi()
-    elif endpoint == "kpi_groups":
-        return get_kpi_groups()
-    elif endpoint == "municipality":
-        return get_municipality()
-    elif endpoint == "municipality_groups":
-        return get_municipality_groups()
-    elif endpoint == "ou":
-        return get_ou()
+    return api_query(endpoint)
 
 
 def _save_non_data(folder_path=None):
@@ -582,9 +524,9 @@ def _save_non_data(folder_path=None):
                 json.dump(json_data, f, indent=4, ensure_ascii=False)
 
 
-def main():
-    _save_non_data(folder_path="data")
+# def main():
+#     _save_non_data(folder_path="data")
 
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

@@ -173,3 +173,7 @@ data/*
 
 # All files ending in ".rst" are ignored
 .rst
+
+
+# File named local_test.py is ignored
+local_test.py
